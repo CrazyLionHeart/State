@@ -54,7 +54,7 @@ def example():
     return jsonify(results=links)
 
 
-@app.route('/list/<doc_type>/</user_login>')
+@app.route('/list/<doc_type>/<user_login>')
 @crossdomain(origin='*')
 def list(doc_type, user_login):
     return jsonify(results=doc_type)

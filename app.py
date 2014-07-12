@@ -7,16 +7,10 @@ try:
 
     from raven.contrib.flask import Sentry
 
-    from flask import jsonify, request, url_for
+    from flask import jsonify, url_for
 
     from State.JsonApp import make_json_app, crossdomain
     from State.config import config
-
-    from base64 import b64decode
-
-    import re
-
-    import logging
 
 except ImportError, e:
     raise e
@@ -30,12 +24,6 @@ app = make_json_app(__name__)
 app.config['SENTRY_DSN'] = dsn
 app.debug = True
 sentry = Sentry(app)
-
-url = 'http://%s/ajax/submitajax.php' % config["obs"]
-user = 'system'
-password = 'system_1234'
-
-auth = requests.auth.HTTPBasicAuth(user, password)
 
 
 def search(id, messages, key):

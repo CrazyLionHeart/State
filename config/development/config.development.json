@@ -7,7 +7,7 @@
         "journal": true,
         "replicaSet": "babypages",
         "writeConcern": 2,
-        "database": "grendizer_dev",
+        "database": "state_dev",
         "max_autoreconnect": 5
     },
     "loggingconfig": {

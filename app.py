@@ -120,7 +120,7 @@ def list(user_login):
         for rule in filtersMain['rules']:
 
             if not filters.get(rule['field']):
-                filters[rule['field']] = list()
+                filters[rule['field']] = []
 
             if rule['op'] == "bw":
                 filters[rule['field']].append({'$regex': '^%s' % rule['data']})
@@ -155,6 +155,9 @@ def list(user_login):
 
         if gridFilters.get('rules'):
             for rule in gridFilters['rules']:
+
+                if not filters.get(rule['field']):
+                    filters[rule['field']] = []
 
                 if rule['op'] == "bw":
                     filters[rule['field']] = re.compile("^%s" % rule['data'])

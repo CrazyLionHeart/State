@@ -59,22 +59,43 @@ def example():
 @app.route('/list/<user_login>', methods=['GET', 'POST'])
 @crossdomain(origin='*')
 def list(user_login):
-    logging.debug("arguments: %s" % request.args)
 
-    page = int(request.args.get('page', 1))
-    rows = int(request.args.get('rows', 30))
-    sidx = request.args.get("sidx")
-    sord = request.args.get("sord")
-    _search = request.args.get("_search")
-    searchField = request.args.get("searchField")
-    searchString = request.args.get("searchString")
-    searchOper = request.args.get("searchOper")
-    other_search = request.args.get("other_search")
-    full_props = request.args.get("full_props")
-    gridFilters = request.args.get("filters")
-    filtersMain = request.args.get("filtersMain")
-    showcols = request.args.get("showcols")
-    totalrows = int(request.args.get("totalrows", 1000))
+    if request.method == 'GET':
+        logging.debug("arguments: %s" % request.args)
+
+        page = int(request.args.get('page', 1))
+        rows = int(request.args.get('rows', 30))
+        sidx = request.args.get("sidx")
+        sord = request.args.get("sord")
+        _search = request.args.get("_search")
+        searchField = request.args.get("searchField")
+        searchString = request.args.get("searchString")
+        searchOper = request.args.get("searchOper")
+        other_search = request.args.get("other_search")
+        full_props = request.args.get("full_props")
+        gridFilters = request.args.get("filters")
+        filtersMain = request.args.get("filtersMain")
+        showcols = request.args.get("showcols")
+        totalrows = int(request.args.get("totalrows", 1000))
+
+    if request.method == 'POST':
+
+        logging.debug("arguments: %s" % request.form)
+
+        page = int(request.form.get('page', 1))
+        rows = int(request.form.get('rows', 30))
+        sidx = request.form.get("sidx")
+        sord = request.form.get("sord")
+        _search = request.form.get("_search")
+        searchField = request.form.get("searchField")
+        searchString = request.form.get("searchString")
+        searchOper = request.form.get("searchOper")
+        other_search = request.form.get("other_search")
+        full_props = request.form.get("full_props")
+        gridFilters = request.form.get("filters")
+        filtersMain = request.form.get("filtersMain")
+        showcols = request.form.get("showcols")
+        totalrows = int(request.form.get("totalrows", 1000))
 
     if not gridFilters:
         gridFilters = {"groupOp": "AND", "rules": []}

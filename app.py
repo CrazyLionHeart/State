@@ -151,7 +151,7 @@ def list(user_login):
                 filters[rule['field']] = {
                     '$not': re.compile("%s$" % rule['data'])}
             elif rule['op'] == "in":
-                filters[rule['field']].append({'$in': rule['data']})
+                filters[rule['field']] = {'$in': rule['data']}
 
         if gridFilters.get('rules'):
             for rule in gridFilters['rules']:
@@ -187,7 +187,7 @@ def list(user_login):
                     filters[rule['field']] = {
                         '$not': re.compile("%s$" % rule['data'])}
                 elif rule['op'] == "in":
-                    filters[rule['field']].append({'$in': rule['data']})
+                    filters[rule['field']] = {'$in': rule['data']}
     else:
         filters = None
 

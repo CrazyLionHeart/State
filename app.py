@@ -55,7 +55,7 @@ def example():
     return jsonify(results=links)
 
 
-@app.route('/list/<user_login>')
+@app.route('/list/<user_login>', methods=['GET', 'POST'])
 @crossdomain(origin='*')
 def list(user_login):
     logging.debug("arguments: %s" % request.args)

@@ -2,11 +2,14 @@
     "mongodb": {
         "connectTimeout": 300000,
         "host": [
-            "127.0.0.1"
+            "192.168.1.231",
+            "192.168.1.232",
+            "192.168.1.233",
+            "192.168.1.234"
         ],
-        "journal": true,
+        "journal": false,
         "replicaSet": "babypages",
-        "writeConcern": 2,
+        "writeConcern": 1,
         "database": "state_dev",
         "max_autoreconnect": 5
     },
@@ -27,7 +30,7 @@
             },
             "sentry": {
                 "class": "raven.handlers.logging.SentryHandler",
-                "dsn": "http://ab22cadfc2bc47a1a50512e71c57b4ac:b0e930cbf76a4226a336b0b7bca534aa@sentry.bbp/8",
+                "dsn": "http://737e8e680db1499d86c4d9d2379a9373:3661756052c747c3a2420b399c897a86@sentry.bbp/11",
                 "level": "WARNING"
             }
         },
@@ -40,8 +43,8 @@
         "version": 1
     },
     "Raven": {
-        "public": "ab22cadfc2bc47a1a50512e71c57b4ac",
-        "private": "b0e930cbf76a4226a336b0b7bca534aa",
-        "host": "sentry.bbp/8"
+        "public": "737e8e680db1499d86c4d9d2379a9373",
+        "private": "3661756052c747c3a2420b399c897a86",
+        "host": "sentry.bbp/11"
     }
 }

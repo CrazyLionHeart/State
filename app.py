@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from gevent import monkey
-    monkey.patch_all()
-
     from raven.contrib.flask import Sentry
 
     from flask import jsonify, url_for, request
@@ -17,7 +14,7 @@ try:
     import json
     import logging
 
-except ImportError, e:
+except ImportError as e:
     raise e
 
 dsn = "http://%s:%s@%s" % (config['Raven']['public'],
@@ -27,7 +24,6 @@ dsn = "http://%s:%s@%s" % (config['Raven']['public'],
 app = make_json_app(__name__)
 
 app.config['SENTRY_DSN'] = dsn
-app.debug = True
 sentry = Sentry(app)
 
 
@@ -59,9 +55,9 @@ def example():
     return jsonify(results=links)
 
 
-@app.route('/list/<doc_type>')
+@app.route('/list/<user_login>')
 @crossdomain(origin='*')
-def list(doc_type):
+def list(user_login):
     logging.debug("arguments: %s" % request.args)
 
     page = int(request.args.get('page', 1))
@@ -89,9 +85,9 @@ def list(doc_type):
     else:
         filtersMain = json.loads(filtersMain)
 
-    showcols = showcols.split(',')
-
-    showcols = [elem for elem in showcols if elem.upper() != elem]
+    if showcols:
+        showcols = showcols.split(',')
+        showcols = [elem for elem in showcols if elem.upper() != elem]
 
     filters = {}
     sort = None
@@ -159,8 +155,8 @@ def list(doc_type):
 
     skip = int((page - 1) * rows)
 
-    all_data = Storage(doc_type).list(filters, rows, sort, skip, showcols)
-    count_data = Storage(doc_type).count()
+    all_data = Storage(user_login).list(filters, rows, sort, skip, showcols)
+    count_data = Storage(user_login).count()
 
     total = int(math.ceil(count_data / float(rows)))
 
@@ -168,15 +164,15 @@ def list(doc_type):
                         records=count_data))
 
 
-@app.route('/mark/<doc_type>/<doc_pin>/<user_login>', methods=['POST'])
+@app.route('/mark/<doc_pin>/<user_login>', methods=['POST'])
 @crossdomain(origin='*')
-def mark(doc_type, doc_pin, user_login):
-    results = Storage(doc_type).set(doc_pin, user_login)
+def mark(doc_pin, user_login):
+    results = Storage(user_login).modify(doc_pin, True)
     return jsonify(results=results)
 
 
-@app.route('/clear/<doc_type>/<doc_pin>/<user_login>', methods=['CLEAR'])
+@app.route('/mark/<doc_pin>/<user_login>', methods=['CLEAR'])
 @crossdomain(origin='*')
-def clear(doc_type, doc_pin, user_login):
-    results = Storage(doc_type).clear(doc_pin, user_login)
+def clear(doc_pin, user_login):
+    results = Storage(user_login).modify(doc_pin, False)
     return jsonify(results=results)

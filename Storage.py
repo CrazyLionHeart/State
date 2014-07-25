@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from gevent import monkey
-    monkey.patch_all()
-
     from State.config import config
 
     from pymongo.mongo_replica_set_client import MongoReplicaSetClient
@@ -16,7 +13,7 @@ try:
     import logging
     import time
 
-except ImportError, e:
+except ImportError as e:
     raise e
 
 
@@ -31,6 +28,8 @@ class Storage(object):
         self.readPreference = ReadPreference.SECONDARY_PREFERRED
         self.collection = collection
 
+        logging.debug(self.collection)
+
     def list(self, filters=None, limit=None, sort=None, skip=None,
              returns=None):
 
@@ -43,7 +42,7 @@ class Storage(object):
                                            read_preference=self.readPreference,
                                            slave_okay=True,
                                            connectTimeoutMS=200)
-        except ConnectionFailure, e:
+        except ConnectionFailure as e:
                 logging.exception("Connection falure error reached: %r" % e)
                 raise Exception(e)
 
@@ -103,7 +102,7 @@ class Storage(object):
                                            read_preference=self.readPreference,
                                            slave_okay=True,
                                            connectTimeoutMS=200)
-        except ConnectionFailure, e:
+        except ConnectionFailure as e:
                 logging.exception("Connection falure error reached: %r" % e)
                 raise Exception(e)
 
@@ -129,17 +128,7 @@ class Storage(object):
         raise Exception("""Error: Failed operation!
                       Is anybody from mongo servers alive?""")
 
-    def set(self, doc_pin, user_login):
-        data = dict(upsert=True, doc_pin=doc_pin, user_login=user_login,
-                    read=True)
-        return self._upsert(data)
-
-    def clear(self, doc_pin, user_login):
-        data = dict(upsert=True, doc_pin=doc_pin, user_login=user_login,
-                    read=False)
-        return self._upsert(data)
-
-    def _upsert(self, *args):
+    def modify(self, doc_pin, state):
 
         try:
             client = MongoReplicaSetClient(self.host,
@@ -150,7 +139,7 @@ class Storage(object):
                                            read_preference=self.readPreference,
                                            slave_okay=True,
                                            connectTimeoutMS=200)
-        except ConnectionFailure, e:
+        except ConnectionFailure as e:
                 logging.exception("Connection falure error reached: %r" % e)
                 raise Exception(e)
 
@@ -163,7 +152,10 @@ class Storage(object):
                 logging.debug("""Trying to send data.
                               Alive hosts: %r""" % client)
 
-                results = collection.update(*args)
+                query = {'doc_pin': doc_pin}
+                data = {'doc_pin': doc_pin, 'state': state}
+
+                results = collection.update(query, data, upsert=True)
                 return json.loads(dumps(results))
 
             except AutoReconnect:

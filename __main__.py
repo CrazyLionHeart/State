@@ -5,9 +5,6 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from gevent import monkey
-    monkey.patch_all()
-
     import sys
     import os
 
@@ -18,7 +15,7 @@ try:
     from State.app import app
     import logging
 
-except ImportError, e:
+except ImportError as e:
     raise e
 
 if __name__ == '__main__':

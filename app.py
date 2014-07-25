@@ -61,7 +61,7 @@ def example():
 def list(user_login):
 
     if request.method == 'GET':
-        logging.debug("arguments: %s" % request.args)
+        logging.debug("GET arguments: %s" % request.args)
 
         page = int(request.args.get('page', 1))
         rows = int(request.args.get('rows', 30))
@@ -80,7 +80,7 @@ def list(user_login):
 
     if request.method == 'POST':
 
-        logging.debug("arguments: %s" % request.form)
+        logging.debug(" POST arguments: %s" % request.form)
 
         page = int(request.form.get('page', 1))
         rows = int(request.form.get('rows', 30))
@@ -101,11 +101,13 @@ def list(user_login):
         gridFilters = {"groupOp": "AND", "rules": []}
     else:
         gridFilters = json.loads(gridFilters)
+        logging.debug("Input gridFilters %s" % gridFilters)
 
     if not filtersMain:
         filtersMain = {"groupOp": "AND", "rules": []}
     else:
         filtersMain = json.loads(filtersMain)
+        logging.debug("Input filtersMain %s" % filtersMain)
 
     if showcols:
         showcols = showcols.split(',')

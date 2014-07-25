@@ -13,6 +13,7 @@ try:
     import math
     import json
     import logging
+    import re
 
 except ImportError as e:
     raise e
@@ -115,7 +116,19 @@ def list(user_login):
             elif rule['op'] == "ge":
                 filters[rule['field']].append({'gte': rule['data']})
             elif rule['op'] == "cn":
-                filters[rule['field']].append({'$text': {'$search': rule['data']}})
+                filters[rule['field']].append(
+                    {'$text': {'$search': rule['data']}})
+            elif rule['op'] == 'nc':
+                    filters[rule['field']] = {
+                        '$not': re.compile("%s" % rule['data'])}
+            elif rule['op'] == 'bn':
+                filters[rule['field']] = {
+                    '$not': re.compile("^%s" % rule['data'])}
+            elif rule['op'] == 'en':
+                filters[rule['field']] = {
+                    '$not': re.compile("%s$" % rule['data'])}
+            elif rule['op'] == "in":
+                filters[rule['field']].append({'$in': rule['data']})
 
         if gridFilters.get('rules'):
             for rule in gridFilters['rules']:
@@ -139,11 +152,16 @@ def list(user_login):
                 elif rule['op'] == "cn":
                     filters[rule['field']] = re.compile("%s" % rule['data'])
                 elif rule['op'] == 'nc':
-                    filters[rule['field']] = {'$not': re.compile("%s" % rule['data'])}
+                    filters[rule['field']] = {
+                        '$not': re.compile("%s" % rule['data'])}
                 elif rule['op'] == 'bn':
-                    filters[rule['field']] = {'$not': re.compile("^%s" % rule['data'])}
+                    filters[rule['field']] = {
+                        '$not': re.compile("^%s" % rule['data'])}
                 elif rule['op'] == 'en':
-                    filters[rule['field']] = {'$not': re.compile("%s$" % rule['data'])}
+                    filters[rule['field']] = {
+                        '$not': re.compile("%s$" % rule['data'])}
+                elif rule['op'] == "in":
+                    filters[rule['field']].append({'$in': rule['data']})
     else:
         filters = None
 

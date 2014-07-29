@@ -1,0 +1,50 @@
+{
+    "mongodb": {
+        "connectTimeout": 300000,
+        "host": [
+            "192.168.1.231",
+            "192.168.1.232",
+            "192.168.1.233",
+            "192.168.1.234"
+        ],
+        "journal": false,
+        "replicaSet": "babypages",
+        "writeConcern": 1,
+        "database": "state_prod",
+        "max_autoreconnect": 5
+    },
+    "loggingconfig": {
+        "disable_existing_loggers": false,
+        "formatters": {
+            "simple": {
+                "datefmt": "%y %b %d, %H:%M:%S",
+                "format": "%(levelname)s:%(name)s: %(message)s \r\n(%(asctime)s; %(filename)s:%(lineno)d)\r\n"
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "simple",
+                "level": "DEBUG",
+                "stream": "ext://sys.stdout"
+            },
+            "sentry": {
+                "class": "raven.handlers.logging.SentryHandler",
+                "dsn": "http://737e8e680db1499d86c4d9d2379a9373:3661756052c747c3a2420b399c897a86@sentry.bbp/11",
+                "level": "WARNING"
+            }
+        },
+        "root": {
+            "level": "DEBUG",
+            "handlers": [
+                "console"
+            ]
+        },
+        "version": 1
+    },
+    "Raven": {
+        "public": "737e8e680db1499d86c4d9d2379a9373",
+        "private": "3661756052c747c3a2420b399c897a86",
+        "host": "sentry.bbp/11"
+    }
+}

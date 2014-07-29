@@ -13,6 +13,7 @@ try:
     import math
     import json
     import logging
+    import re
 
 except ImportError as e:
     raise e
@@ -55,35 +56,58 @@ def example():
     return jsonify(results=links)
 
 
-@app.route('/list/<user_login>')
+@app.route('/list/<user_login>', methods=['GET', 'POST'])
 @crossdomain(origin='*')
 def list(user_login):
-    logging.debug("arguments: %s" % request.args)
 
-    page = int(request.args.get('page', 1))
-    rows = int(request.args.get('rows', 30))
-    sidx = request.args.get("sidx")
-    sord = request.args.get("sord")
-    _search = request.args.get("_search")
-    searchField = request.args.get("searchField")
-    searchString = request.args.get("searchString")
-    searchOper = request.args.get("searchOper")
-    other_search = request.args.get("other_search")
-    full_props = request.args.get("full_props")
-    gridFilters = request.args.get("filters")
-    filtersMain = request.args.get("filtersMain")
-    showcols = request.args.get("showcols")
-    totalrows = int(request.args.get("totalrows", 1000))
+    if request.method == 'GET':
+        logging.debug("GET arguments: %s" % request.args)
+
+        page = int(request.args.get('page', 1))
+        rows = int(request.args.get('rows', 30))
+        sidx = request.args.get("sidx")
+        sord = request.args.get("sord")
+        _search = request.args.get("_search")
+        searchField = request.args.get("searchField")
+        searchString = request.args.get("searchString")
+        searchOper = request.args.get("searchOper")
+        other_search = request.args.get("other_search")
+        full_props = request.args.get("full_props")
+        gridFilters = request.args.get("filters")
+        filtersMain = request.args.get("filtersMain")
+        showcols = request.args.get("showcols")
+        totalrows = int(request.args.get("totalrows", 1000))
+
+    if request.method == 'POST':
+
+        logging.debug(" POST arguments: %s" % request.form)
+
+        page = int(request.form.get('page', 1))
+        rows = int(request.form.get('rows', 30))
+        sidx = request.form.get("sidx")
+        sord = request.form.get("sord")
+        _search = request.form.get("_search")
+        searchField = request.form.get("searchField")
+        searchString = request.form.get("searchString")
+        searchOper = request.form.get("searchOper")
+        other_search = request.form.get("other_search")
+        full_props = request.form.get("full_props")
+        gridFilters = request.form.get("filters")
+        filtersMain = request.form.get("filtersMain")
+        showcols = request.form.get("showcols")
+        totalrows = int(request.form.get("totalrows", 1000))
 
     if not gridFilters:
         gridFilters = {"groupOp": "AND", "rules": []}
     else:
         gridFilters = json.loads(gridFilters)
+        logging.debug("Input gridFilters %s" % gridFilters)
 
     if not filtersMain:
         filtersMain = {"groupOp": "AND", "rules": []}
     else:
         filtersMain = json.loads(filtersMain)
+        logging.debug("Input filtersMain %s" % filtersMain)
 
     if showcols:
         showcols = showcols.split(',')
@@ -96,7 +120,7 @@ def list(user_login):
         for rule in filtersMain['rules']:
 
             if not filters.get(rule['field']):
-                filters[rule['field']] = list()
+                filters[rule['field']] = []
 
             if rule['op'] == "bw":
                 filters[rule['field']].append({'$regex': '^%s' % rule['data']})
@@ -115,10 +139,25 @@ def list(user_login):
             elif rule['op'] == "ge":
                 filters[rule['field']].append({'gte': rule['data']})
             elif rule['op'] == "cn":
-                filters[rule['field']].append({'$text': {'$search': rule['data']}})
+                filters[rule['field']].append(
+                    {'$text': {'$search': rule['data']}})
+            elif rule['op'] == 'nc':
+                    filters[rule['field']] = {
+                        '$not': re.compile("%s" % rule['data'])}
+            elif rule['op'] == 'bn':
+                filters[rule['field']] = {
+                    '$not': re.compile("^%s" % rule['data'])}
+            elif rule['op'] == 'en':
+                filters[rule['field']] = {
+                    '$not': re.compile("%s$" % rule['data'])}
+            elif rule['op'] == "in":
+                filters[rule['field']] = {'$in': rule['data']}
 
         if gridFilters.get('rules'):
             for rule in gridFilters['rules']:
+
+                if not filters.get(rule['field']):
+                    filters[rule['field']] = []
 
                 if rule['op'] == "bw":
                     filters[rule['field']] = re.compile("^%s" % rule['data'])
@@ -139,11 +178,16 @@ def list(user_login):
                 elif rule['op'] == "cn":
                     filters[rule['field']] = re.compile("%s" % rule['data'])
                 elif rule['op'] == 'nc':
-                    filters[rule['field']] = {'$not': re.compile("%s" % rule['data'])}
+                    filters[rule['field']] = {
+                        '$not': re.compile("%s" % rule['data'])}
                 elif rule['op'] == 'bn':
-                    filters[rule['field']] = {'$not': re.compile("^%s" % rule['data'])}
+                    filters[rule['field']] = {
+                        '$not': re.compile("^%s" % rule['data'])}
                 elif rule['op'] == 'en':
-                    filters[rule['field']] = {'$not': re.compile("%s$" % rule['data'])}
+                    filters[rule['field']] = {
+                        '$not': re.compile("%s$" % rule['data'])}
+                elif rule['op'] == "in":
+                    filters[rule['field']] = {'$in': rule['data']}
     else:
         filters = None
 

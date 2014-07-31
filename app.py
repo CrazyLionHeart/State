@@ -199,8 +199,10 @@ def list(user_login):
 
     skip = int((page - 1) * rows)
 
-    all_data = Storage(user_login).list(filters, rows, sort, skip, showcols)
-    count_data = Storage(user_login).count()
+    storage = Storage()
+    storage.setCollection(user_login)
+    all_data = storage.list(filters, rows, sort, skip, showcols)
+    count_data = storage.count()
 
     total = int(math.ceil(count_data / float(rows)))
 

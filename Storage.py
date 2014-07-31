@@ -26,9 +26,46 @@ class Storage(object):
         self.writeConcern = self.mongodb['writeConcern']
         self.journal = self.mongodb['journal']
         self.readPreference = ReadPreference.SECONDARY_PREFERRED
-        self.collection = collection
 
+    def setCollection(self, collection):
+        self.collection = collection
         logging.debug(self.collection)
+
+    def getCollections(self):
+        try:
+            client = MongoReplicaSetClient(self.host,
+                                           replicaSet=self.replicaSet,
+                                           use_greenlets=True,
+                                           w=self.writeConcern,
+                                           j=self.journal,
+                                           read_preference=self.readPreference,
+                                           slave_okay=True,
+                                           connectTimeoutMS=200)
+        except ConnectionFailure as e:
+                logging.exception("Connection falure error reached: %r" % e)
+                raise Exception(e)
+
+        db = client[self.mongodb['database']]
+        db.read_preference = self.readPreference
+
+        for i in xrange(self.mongodb["max_autoreconnect"]):
+            try:
+                logging.debug("""Trying to send data.
+                              Alive hosts: %r""" % client)
+
+                return db.collection_names(include_system_collections=False)
+
+            except AutoReconnect:
+                time.sleep(pow(2, i))
+                logging.debug("""Autoreconnect error reached.
+                          Trying to resend data by timeout.
+                          Previous alive hosts: %r""" % client)
+
+        client.close()
+        logging.exception("""Error: Failed operation!
+                      Is anybody from mongo servers alive?""")
+        raise Exception("""Error: Failed operation!
+                      Is anybody from mongo servers alive?""")
 
     def list(self, filters=None, limit=None, sort=None, skip=None,
              returns=None):
@@ -128,7 +165,48 @@ class Storage(object):
         raise Exception("""Error: Failed operation!
                       Is anybody from mongo servers alive?""")
 
-    def modify(self, doc_pin, state):
+    def insert(self, doc_pin):
+
+        try:
+            client = MongoReplicaSetClient(self.host,
+                                           replicaSet=self.replicaSet,
+                                           use_greenlets=True,
+                                           w=self.writeConcern,
+                                           j=self.journal,
+                                           read_preference=self.readPreference,
+                                           slave_okay=True,
+                                           connectTimeoutMS=200)
+        except ConnectionFailure as e:
+                logging.exception("Connection falure error reached: %r" % e)
+                raise Exception(e)
+
+        db = client[self.mongodb['database']]
+        db.read_preference = self.readPreference
+        collection = db[self.collection]
+
+        for i in xrange(self.mongodb["max_autoreconnect"]):
+            try:
+                logging.debug("""Trying to send data.
+                              Alive hosts: %r""" % client)
+
+                data = {'doc_pin': doc_pin}
+
+                results = collection.insert(data)
+                return json.loads(dumps(results))
+
+            except AutoReconnect:
+                time.sleep(pow(2, i))
+                logging.debug("""Autoreconnect error reached.
+                          Trying to resend data by timeout.
+                          Previous alive hosts: %r""" % client)
+
+        client.close()
+        logging.exception("""Error: Failed operation!
+                      Is anybody from mongo servers alive?""")
+        raise Exception("""Error: Failed operation!
+                      Is anybody from mongo servers alive?""")
+
+    def remove(self, doc_pin):
 
         try:
             client = MongoReplicaSetClient(self.host,
@@ -153,9 +231,8 @@ class Storage(object):
                               Alive hosts: %r""" % client)
 
                 query = {'doc_pin': doc_pin}
-                data = {'doc_pin': doc_pin, 'state': state}
 
-                results = collection.update(query, data, upsert=True)
+                results = collection.remove(query)
                 return json.loads(dumps(results))
 
             except AutoReconnect:

@@ -211,12 +211,18 @@ def list(user_login):
 @app.route('/mark/<doc_pin>/<user_login>', methods=['POST'])
 @crossdomain(origin='*')
 def mark(doc_pin, user_login):
-    results = Storage(user_login).modify(doc_pin, True)
+    storage = Storage()
+    storage.setCollection(user_login)
+    results = storage.insert(doc_pin)
     return jsonify(results=results)
 
 
-@app.route('/mark/<doc_pin>/<user_login>', methods=['CLEAR'])
+@app.route('/mark/<doc_pin>', methods=['CLEAR'])
 @crossdomain(origin='*')
 def clear(doc_pin, user_login):
-    results = Storage(user_login).modify(doc_pin, False)
+    storage = Storage()
+    results = []
+    for element in storage.getCollections():
+        storage.setCollection(element)
+        results.append(storage.remove(doc_pin))
     return jsonify(results=results)

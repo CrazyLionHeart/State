@@ -221,7 +221,7 @@ def mark(doc_pin, user_login):
 
 @app.route('/mark/<doc_pin>', methods=['CLEAR'])
 @crossdomain(origin='*')
-def clear(doc_pin, user_login):
+def clear(doc_pin):
     storage = Storage()
     results = []
     for element in storage.getCollections():

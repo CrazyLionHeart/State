@@ -64,7 +64,7 @@ def list(user_login):
         logging.debug("GET arguments: %s" % request.args)
 
         page = int(request.args.get('page', 1))
-        rows = int(request.args.get('rows', 30))
+        rows = int(request.args.get('rows', 1000))
         sidx = request.args.get("sidx")
         sord = request.args.get("sord")
         _search = request.args.get("_search")
@@ -83,7 +83,7 @@ def list(user_login):
         logging.debug(" POST arguments: %s" % request.form)
 
         page = int(request.form.get('page', 1))
-        rows = int(request.form.get('rows', 30))
+        rows = int(request.form.get('rows', 1000))
         sidx = request.form.get("sidx")
         sord = request.form.get("sord")
         _search = request.form.get("_search")

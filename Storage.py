@@ -19,7 +19,7 @@ except ImportError as e:
 
 class Storage(object):
 
-    def __init__(self, collection):
+    def __init__(self):
         self.mongodb = config['mongodb']
         self.host = ",".join(self.mongodb['host'])
         self.replicaSet = self.mongodb['replicaSet']

@@ -11,7 +11,6 @@ try:
     from bson.json_util import dumps
     import json
     import logging
-    import time
 
 except ImportError as e:
     raise e
@@ -19,73 +18,46 @@ except ImportError as e:
 
 class Storage(object):
 
-    def __init__(self):
-        self.mongodb = config['mongodb']
-        self.host = ",".join(self.mongodb['host'])
-        self.replicaSet = self.mongodb['replicaSet']
-        self.writeConcern = self.mongodb['writeConcern']
-        self.journal = self.mongodb['journal']
-        self.readPreference = ReadPreference.SECONDARY_PREFERRED
-
-    def setCollection(self, collection):
-        self.collection = collection
-        logging.debug(self.collection)
-
-    def getCollections(self):
+    def __init__(self, collection=None, *args, **kwargs):
         try:
-            client = MongoReplicaSetClient(self.host,
-                                           replicaSet=self.replicaSet,
+            mongodb = config['mongodb']
+            host = ",".join(mongodb['host'])
+            replicaSet = mongodb['replicaSet']
+            writeConcern = mongodb['writeConcern']
+            journal = mongodb['journal']
+            readPreference = ReadPreference.SECONDARY_PREFERRED
+
+            client = MongoReplicaSetClient(host,
+                                           replicaSet=replicaSet,
                                            use_greenlets=True,
-                                           w=self.writeConcern,
-                                           j=self.journal,
-                                           read_preference=self.readPreference,
+                                           w=writeConcern,
+                                           j=journal,
+                                           read_preference=readPreference,
                                            slave_okay=True,
                                            connectTimeoutMS=200)
+
+            self.db = client[mongodb['database']]
+            self.db.read_preference = readPreference
+
+            if collection:
+                self.setCollection(collection)
+
         except ConnectionFailure as e:
-                logging.exception("Connection falure error reached: %r" % e)
-                raise Exception(e)
+            raise Exception("Connection falure error reached: %r" % e)
+        except AutoReconnect as e:
+            raise Exception("AutoReconnect failure reached: %r" % e)
 
-        db = client[self.mongodb['database']]
-        db.read_preference = self.readPreference
+    def getCollections(self):
+        return self.db.collection_names(include_system_collections=False)
 
-        for i in xrange(self.mongodb["max_autoreconnect"]):
-            try:
-                logging.debug("""Trying to send data.
-                              Alive hosts: %r""" % client)
-
-                return db.collection_names(include_system_collections=False)
-
-            except AutoReconnect:
-                time.sleep(pow(2, i))
-                logging.debug("""Autoreconnect error reached.
-                          Trying to resend data by timeout.
-                          Previous alive hosts: %r""" % client)
-
-        client.close()
-        logging.exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
-        raise Exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
+    def setCollection(self, collection):
+        if collection:
+            self.collection = self.db[collection]
+        else:
+            raise Exception("Collection name not defined")
 
     def list(self, filters=None, limit=None, sort=None, skip=None,
              returns=None):
-
-        try:
-            client = MongoReplicaSetClient(self.host,
-                                           replicaSet=self.replicaSet,
-                                           use_greenlets=True,
-                                           w=self.writeConcern,
-                                           j=self.journal,
-                                           read_preference=self.readPreference,
-                                           slave_okay=True,
-                                           connectTimeoutMS=200)
-        except ConnectionFailure as e:
-                logging.exception("Connection falure error reached: %r" % e)
-                raise Exception(e)
-
-        db = client[self.mongodb['database']]
-        db.read_preference = self.readPreference
-        collection = db[self.collection]
 
         kwargs = dict()
 
@@ -98,151 +70,36 @@ class Storage(object):
         if returns:
             kwargs['fields'] = returns
 
-        for i in xrange(self.mongodb["max_autoreconnect"]):
-            try:
-                logging.debug("""Trying to send data.
-                              Alive hosts: %r""" % client)
+        if not filters:
+            filters = {}
 
-                if filters:
-                    results = collection.find(filters, **kwargs)
-                else:
-                    results = collection.find(**kwargs)
+        results = self.collection.find(filters, **kwargs)
 
-                if sort:
-                    if sort['direction'] == 'asc':
-                        results = results.sort(sort['key'], ASCENDING)
-                    else:
-                        results = results.sort(sort['key'], DESCENDING)
+        logging.debug("Result: %s" % results)
 
-                return json.loads(dumps(results))
-
-            except AutoReconnect:
-                time.sleep(pow(2, i))
-                logging.debug("""Autoreconnect error reached.
-                          Trying to resend data by timeout.
-                          Previous alive hosts: %r""" % client)
-
-        client.close()
-        logging.exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
-        raise Exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
+        if sort:
+            if sort['direction'] == 'asc':
+                key = ASCENDING
+            else:
+                key = ASCENDING
+            return json.loads(dumps(results.sort(sort['key'], key)))
+        else:
+            return json.loads(dumps(results))
 
     def count(self):
 
-        try:
-            client = MongoReplicaSetClient(self.host,
-                                           replicaSet=self.replicaSet,
-                                           use_greenlets=True,
-                                           w=self.writeConcern,
-                                           j=self.journal,
-                                           read_preference=self.readPreference,
-                                           slave_okay=True,
-                                           connectTimeoutMS=200)
-        except ConnectionFailure as e:
-                logging.exception("Connection falure error reached: %r" % e)
-                raise Exception(e)
-
-        db = client[self.mongodb['database']]
-        db.read_preference = self.readPreference
-        collection = db[self.collection]
-
-        for i in xrange(self.mongodb["max_autoreconnect"]):
-            try:
-                logging.debug("""Trying to send data.
-                              Alive hosts: %r""" % client)
-
-                return collection.find().count()
-            except AutoReconnect:
-                time.sleep(pow(2, i))
-                logging.debug("""Autoreconnect error reached.
-                          Trying to resend data by timeout.
-                          Previous alive hosts: %r""" % client)
-
-        client.close()
-        logging.exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
-        raise Exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
+        return self.collection.find({}).count()
 
     def insert(self, doc_pin):
 
-        try:
-            client = MongoReplicaSetClient(self.host,
-                                           replicaSet=self.replicaSet,
-                                           use_greenlets=True,
-                                           w=self.writeConcern,
-                                           j=self.journal,
-                                           read_preference=self.readPreference,
-                                           slave_okay=True,
-                                           connectTimeoutMS=200)
-        except ConnectionFailure as e:
-                logging.exception("Connection falure error reached: %r" % e)
-                raise Exception(e)
+        results = self.collection.insert({'doc_pin': doc_pin})
 
-        db = client[self.mongodb['database']]
-        db.read_preference = self.readPreference
-        collection = db[self.collection]
-
-        for i in xrange(self.mongodb["max_autoreconnect"]):
-            try:
-                logging.debug("""Trying to send data.
-                              Alive hosts: %r""" % client)
-
-                data = {'doc_pin': doc_pin}
-
-                results = collection.insert(data)
-                return json.loads(dumps(results))
-
-            except AutoReconnect:
-                time.sleep(pow(2, i))
-                logging.debug("""Autoreconnect error reached.
-                          Trying to resend data by timeout.
-                          Previous alive hosts: %r""" % client)
-
-        client.close()
-        logging.exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
-        raise Exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
+        return json.loads(dumps(results))
 
     def remove(self, doc_pin):
+        results = []
+        for element in self.getCollections():
+            self.setCollection(element)
+            results.append(self.collection.remove({'doc_pin': doc_pin},))
 
-        try:
-            client = MongoReplicaSetClient(self.host,
-                                           replicaSet=self.replicaSet,
-                                           use_greenlets=True,
-                                           w=self.writeConcern,
-                                           j=self.journal,
-                                           read_preference=self.readPreference,
-                                           slave_okay=True,
-                                           connectTimeoutMS=200)
-        except ConnectionFailure as e:
-                logging.exception("Connection falure error reached: %r" % e)
-                raise Exception(e)
-
-        db = client[self.mongodb['database']]
-        db.read_preference = self.readPreference
-        collection = db[self.collection]
-
-        for i in xrange(self.mongodb["max_autoreconnect"]):
-            try:
-                logging.debug("""Trying to send data.
-                              Alive hosts: %r""" % client)
-
-                query = {'doc_pin': doc_pin}
-
-                results = collection.remove(query)
-                return json.loads(dumps(results))
-
-            except AutoReconnect:
-                time.sleep(pow(2, i))
-                logging.debug("""Autoreconnect error reached.
-                          Trying to resend data by timeout.
-                          Previous alive hosts: %r""" % client)
-
-        client.close()
-        logging.exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
-        raise Exception("""Error: Failed operation!
-                      Is anybody from mongo servers alive?""")
+        return json.loads(dumps(results))

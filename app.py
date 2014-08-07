@@ -199,10 +199,8 @@ def list(user_login):
 
     skip = int((page - 1) * rows)
 
-    storage = Storage()
-    storage.setCollection(user_login)
-    all_data = storage.list(filters, rows, sort, skip, showcols)
-    count_data = storage.count()
+    all_data = Storage(user_login).list(filters, rows, sort, skip, showcols)
+    count_data = Storage(user_login).count()
 
     total = int(math.ceil(count_data / float(rows)))
 
@@ -213,18 +211,12 @@ def list(user_login):
 @app.route('/mark/<doc_pin>/<user_login>', methods=['POST'])
 @crossdomain(origin='*')
 def mark(doc_pin, user_login):
-    storage = Storage()
-    storage.setCollection(user_login)
-    results = storage.insert(doc_pin)
+    results = Storage(user_login).insert(doc_pin)
     return jsonify(results=results)
 
 
 @app.route('/mark/<doc_pin>', methods=['CLEAR'])
 @crossdomain(origin='*')
 def clear(doc_pin):
-    storage = Storage()
-    results = []
-    for element in storage.getCollections():
-        storage.setCollection(element)
-        results.append(storage.remove(doc_pin))
+    results = Storage().remove(doc_pin)
     return jsonify(results=results)

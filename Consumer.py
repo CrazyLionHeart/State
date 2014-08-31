@@ -21,8 +21,6 @@ activemq = config['activemq']
 default_uri = '''failover:(tcp://%(host)s:%(port)d,tcp://%(host)s:%(port)d)?randomize=%(randomize)s,startupMaxReconnectAttempts=%(startupMaxReconnectAttempts)d,initialReconnectDelay=%(initialReconnectDelay)d,maxReconnectDelay=%(maxReconnectDelay)d,maxReconnectAttempts=%(maxReconnectAttempts)d''' % activemq[
     'stomp']
 
-queue = "/topic/%s" % config['queue']['BotNet']
-
 logger = logging.getLogger(__name__)
 
 dsn = 'http://%(public)s:%(private)s@%(host)s' % config['Raven']
@@ -49,7 +47,7 @@ class Consumer(object):
             # the same time
             'activemq.prefetchSize': '100',
         }
-        client.subscribe(queue, headers)
+        client.subscribe(config['queue']['BotNet'], headers)
 
         while True:
             frame = client.receiveFrame()

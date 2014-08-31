@@ -49,9 +49,14 @@ def example():
 
             url = url_for(rule.endpoint, **options)
             docstring = app.view_functions[rule.endpoint].__doc__
-            links.append(
-                dict(methods=methods, url=urllib.unquote(url),
-                     docstring=docstring))
+            try:
+                links.append(
+                    dict(methods=methods, url=urllib.unquote(url),
+                         docstring=docstring))
+            except:
+                links.append(
+                    dict(methods=methods, url=urllib.unquote(url),
+                         docstring=docstring))
 
     return jsonify(results=links)
 
@@ -59,6 +64,7 @@ def example():
 @app.route('/list/<user_login>', methods=['GET', 'POST'])
 @crossdomain(origin='*')
 def list(user_login):
+    u'''Возвращает список прочитанных пользователем документов'''
 
     if request.method == 'GET':
         logging.debug("GET arguments: %s" % request.args)
@@ -211,6 +217,7 @@ def list(user_login):
 @app.route('/mark/<doc_pin>/<user_login>', methods=['POST'])
 @crossdomain(origin='*')
 def mark(doc_pin, user_login):
+    u'''Помечает документа прочитанным пользователем'''
     results = Storage(user_login).insert(doc_pin)
     return jsonify(results=results)
 
@@ -218,5 +225,6 @@ def mark(doc_pin, user_login):
 @app.route('/mark/<doc_pin>', methods=['CLEAR'])
 @crossdomain(origin='*')
 def clear(doc_pin):
+    u'''Очищает пометку прочитанности для всех пользователей'''
     results = Storage().remove(doc_pin)
     return jsonify(results=results)

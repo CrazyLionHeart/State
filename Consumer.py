@@ -64,5 +64,8 @@ class Consumer(object):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    Consumer().run()
+    try:
+        logging.basicConfig(level=logging.DEBUG)
+        Consumer().run()
+    except KeyboardInterrupt:
+        exit(0)

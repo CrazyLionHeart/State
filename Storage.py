@@ -6,7 +6,6 @@ try:
 
     from pymongo.mongo_replica_set_client import MongoReplicaSetClient
     from pymongo.errors import AutoReconnect, ConnectionFailure
-    from pymongo.read_preferences import ReadPreference
     from pymongo import ASCENDING, DESCENDING
     from bson.json_util import dumps
     import json
@@ -25,19 +24,16 @@ class Storage(object):
             replicaSet = mongodb['replicaSet']
             writeConcern = mongodb['writeConcern']
             journal = mongodb['journal']
-            readPreference = ReadPreference.SECONDARY_PREFERRED
 
             client = MongoReplicaSetClient(host,
                                            replicaSet=replicaSet,
                                            use_greenlets=True,
                                            w=writeConcern,
                                            j=journal,
-                                           read_preference=readPreference,
                                            slave_okay=True,
                                            connectTimeoutMS=200)
 
             self.db = client[mongodb['database']]
-            self.db.read_preference = readPreference
 
             if collection:
                 self.setCollection(collection)
@@ -81,7 +77,7 @@ class Storage(object):
             if sort['direction'] == 'asc':
                 key = ASCENDING
             else:
-                key = ASCENDING
+                key = DESCENDING
             return json.loads(dumps(results.sort(sort['key'], key)))
         else:
             return json.loads(dumps(results))

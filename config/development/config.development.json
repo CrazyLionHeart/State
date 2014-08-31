@@ -46,5 +46,26 @@
         "public": "737e8e680db1499d86c4d9d2379a9373",
         "private": "3661756052c747c3a2420b399c897a86",
         "host": "sentry.bbp/11"
+    },
+    "activemq": {
+        "stomp": {
+            "host": "192.168.1.214",
+            "initialReconnectDelay": 7,
+            "maxReconnectAttempts": 1,
+            "maxReconnectDelay": 8,
+            "port": 61612,
+            "randomize": "false",
+            "startupMaxReconnectAttempts": 1
+        },
+        "http": {
+            "host": "192.168.1.213",
+            "port": 8161,
+            "uri": "/api/message/"
+        },
+        "password": "admin",
+        "username": "admin"
+    },
+    "queue": {
+        "BotNet": "/topic/ControlMessage"
     }
 }

@@ -49,9 +49,14 @@ def example():
 
             url = url_for(rule.endpoint, **options)
             docstring = app.view_functions[rule.endpoint].__doc__
-            links.append(
-                dict(methods=methods, url=urllib.unquote(url),
-                     docstring=docstring))
+            try:
+                links.append(
+                    dict(methods=methods, url=urllib.unquote(url),
+                         docstring=docstring))
+            except:
+                links.append(
+                    dict(methods=methods, url=urllib.unquote(url),
+                         docstring=docstring))
 
     return jsonify(results=links)
 
@@ -59,12 +64,13 @@ def example():
 @app.route('/list/<user_login>', methods=['GET', 'POST'])
 @crossdomain(origin='*')
 def list(user_login):
+    u'''Возвращает список прочитанных пользователем документов'''
 
     if request.method == 'GET':
         logging.debug("GET arguments: %s" % request.args)
 
         page = int(request.args.get('page', 1))
-        rows = int(request.args.get('rows', 30))
+        rows = int(request.args.get('rows', 1000))
         sidx = request.args.get("sidx")
         sord = request.args.get("sord")
         _search = request.args.get("_search")
@@ -83,7 +89,7 @@ def list(user_login):
         logging.debug(" POST arguments: %s" % request.form)
 
         page = int(request.form.get('page', 1))
-        rows = int(request.form.get('rows', 30))
+        rows = int(request.form.get('rows', 1000))
         sidx = request.form.get("sidx")
         sord = request.form.get("sord")
         _search = request.form.get("_search")
@@ -211,12 +217,14 @@ def list(user_login):
 @app.route('/mark/<doc_pin>/<user_login>', methods=['POST'])
 @crossdomain(origin='*')
 def mark(doc_pin, user_login):
-    results = Storage(user_login).modify(doc_pin, True)
+    u'''Помечает документа прочитанным пользователем'''
+    results = Storage(user_login).insert(doc_pin)
     return jsonify(results=results)
 
 
-@app.route('/mark/<doc_pin>/<user_login>', methods=['CLEAR'])
+@app.route('/mark/<doc_pin>', methods=['CLEAR'])
 @crossdomain(origin='*')
-def clear(doc_pin, user_login):
-    results = Storage(user_login).modify(doc_pin, False)
+def clear(doc_pin):
+    u'''Очищает пометку прочитанности для всех пользователей'''
+    results = Storage().remove(doc_pin)
     return jsonify(results=results)

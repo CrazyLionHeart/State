@@ -5,7 +5,7 @@ try:
     from State.config import config
 
     from pymongo.mongo_replica_set_client import MongoReplicaSetClient
-    from pymongo.errors import AutoReconnect, ConnectionFailure
+    from pymongo.errors import ConnectionFailure, OperationFailure
     from pymongo import ASCENDING, DESCENDING
     from bson.json_util import dumps
     import json
@@ -40,8 +40,6 @@ class Storage(object):
 
         except ConnectionFailure as e:
             raise Exception("Connection falure error reached: %r" % e)
-        except AutoReconnect as e:
-            raise Exception("AutoReconnect failure reached: %r" % e)
 
     def getCollections(self):
         return self.db.collection_names(include_system_collections=False)
@@ -84,7 +82,11 @@ class Storage(object):
 
     def count(self):
 
-        return self.collection.find({}).count()
+        try:
+            result = self.db.command('collstats', self.collection)
+            return result['count']
+        except OperationFailure:
+            return 0
 
     def insert(self, doc_pin):
 

@@ -56,7 +56,7 @@ class Consumer(object):
             if body and data.get('action') == 'update' and \
                 body.get('func_name') == 'updater.receive' and \
                     body.get('func_args'):
-                args = json.loads(body.get('func_args'))
+                args = body.get('func_args')
                 if args.get('data'):
                     doc_pin = args['data']['objects'][0]['id']
                     Storage().remove(doc_pin)

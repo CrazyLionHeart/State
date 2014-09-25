@@ -3,6 +3,7 @@
 
 try:
     from raven.contrib.flask import Sentry
+    from raven.middleware import Sentry as SentryMiddleware
 
     from flask import jsonify, url_for, request
 
@@ -12,7 +13,6 @@ try:
 
     import math
     import json
-    import logging
     import re
 
 except ImportError as e:
@@ -23,9 +23,10 @@ dsn = "http://%s:%s@%s" % (config['Raven']['public'],
                            config['Raven']['host'])
 
 app = make_json_app(__name__)
-
 app.config['SENTRY_DSN'] = dsn
-sentry = Sentry(app)
+sentry = Sentry(dsn=dsn, logging=True)
+sentry.init_app(app)
+app.wsgi = SentryMiddleware(app.wsgi_app, sentry.client)
 
 
 def search(id, messages, key):
@@ -67,7 +68,7 @@ def list(user_login):
     u'''Возвращает список прочитанных пользователем документов'''
 
     if request.method == 'GET':
-        logging.debug("GET arguments: %s" % request.args)
+        app.logger.debug("GET arguments: %s" % request.args)
 
         page = int(request.args.get('page', 1))
         rows = int(request.args.get('rows', 1000))
@@ -86,7 +87,7 @@ def list(user_login):
 
     if request.method == 'POST':
 
-        logging.debug(" POST arguments: %s" % request.form)
+        app.logger.debug(" POST arguments: %s" % request.form)
 
         page = int(request.form.get('page', 1))
         rows = int(request.form.get('rows', 1000))
@@ -107,13 +108,13 @@ def list(user_login):
         gridFilters = {"groupOp": "AND", "rules": []}
     else:
         gridFilters = json.loads(gridFilters)
-        logging.debug("Input gridFilters %s" % gridFilters)
+        app.logger.debug("Input gridFilters %s" % gridFilters)
 
     if not filtersMain:
         filtersMain = {"groupOp": "AND", "rules": []}
     else:
         filtersMain = json.loads(filtersMain)
-        logging.debug("Input filtersMain %s" % filtersMain)
+        app.logger.debug("Input filtersMain %s" % filtersMain)
 
     if showcols:
         showcols = showcols.split(',')
@@ -197,7 +198,7 @@ def list(user_login):
     else:
         filters = None
 
-    logging.debug("Filters: %s" % filters)
+    app.logger.debug("Filters: %s" % filters)
 
     if sidx:
         if sord:

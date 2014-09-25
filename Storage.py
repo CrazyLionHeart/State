@@ -5,8 +5,7 @@ try:
     from State.config import config
 
     from pymongo.mongo_replica_set_client import MongoReplicaSetClient
-    from pymongo.errors import ConnectionFailure, OperationFailure
-    from pymongo.errors import InvalidDocument
+    from pymongo.errors import ConnectionFailure
     from pymongo import ASCENDING, DESCENDING
     from bson.json_util import dumps
     import json
@@ -82,14 +81,6 @@ class Storage(object):
             return json.loads(dumps(results.sort(sort['key'], key)))
         else:
             return json.loads(dumps(results))
-
-    def count(self):
-
-        try:
-            result = self.db.command('collstats', self.collection)
-            return result['count']
-        except (OperationFailure, InvalidDocument):
-            return 0
 
     def insert(self, doc_pin):
 

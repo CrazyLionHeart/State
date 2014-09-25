@@ -6,6 +6,7 @@ try:
 
     from pymongo.mongo_replica_set_client import MongoReplicaSetClient
     from pymongo.errors import ConnectionFailure, OperationFailure
+    from pymongo.errors import InvalidDocument
     from pymongo import ASCENDING, DESCENDING
     from bson.json_util import dumps
     import json
@@ -13,6 +14,8 @@ try:
 
 except ImportError as e:
     raise e
+
+logger = logging.getLogger(__name__)
 
 
 class Storage(object):
@@ -69,7 +72,7 @@ class Storage(object):
 
         results = self.collection.find(filters, **kwargs)
 
-        logging.debug("Result: %s" % results)
+        logger.debug("Result: %s" % results)
 
         if sort:
             if sort['direction'] == 'asc':
@@ -85,7 +88,7 @@ class Storage(object):
         try:
             result = self.db.command('collstats', self.collection)
             return result['count']
-        except OperationFailure:
+        except (OperationFailure, InvalidDocument):
             return 0
 
     def insert(self, doc_pin):

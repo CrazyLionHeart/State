@@ -62,11 +62,11 @@
     "stomp": {
       "host": "192.168.1.213",
       "initialReconnectDelay": 7,
-      "maxReconnectAttempts": -1,
+      "maxReconnectAttempts": 1,
       "maxReconnectDelay": 8,
       "port": 61612,
       "randomize": "false",
-      "startupMaxReconnectAttempts": -1
+      "startupMaxReconnectAttempts": 1
     },
     "http": {
       "host": "192.168.1.213",

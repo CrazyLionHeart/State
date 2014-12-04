@@ -5,7 +5,7 @@ try:
     from State.config import config
 
     from pymongo.mongo_replica_set_client import MongoReplicaSetClient
-    from pymongo.errors import ConnectionFailure
+    from pymongo.errors import ConnectionFailure, AutoReconnect
     from pymongo import ASCENDING, DESCENDING
     from bson.json_util import dumps
     import json
@@ -13,8 +13,6 @@ try:
 
 except ImportError as e:
     raise e
-
-logger = logging.getLogger(__name__)
 
 
 class Storage(object):
@@ -40,17 +38,29 @@ class Storage(object):
             if collection:
                 self.setCollection(collection)
 
+        except AutoReconnect:
+            pass
         except ConnectionFailure as e:
             raise Exception("Connection falure error reached: %r" % e)
 
+    @property
+    def log(self):
+        return logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
+
     def getCollections(self):
-        return self.db.collection_names(include_system_collections=False)
+        try:
+            return self.db.collection_names(include_system_collections=False)
+        except AutoReconnect:
+            pass
 
     def setCollection(self, collection):
-        if collection:
-            self.collection = self.db[collection]
-        else:
-            raise Exception("Collection name not defined")
+        try:
+            if collection:
+                self.collection = self.db[collection]
+            else:
+                raise Exception("Collection name not defined")
+        except AutoReconnect:
+            pass
 
     def list(self, filters=None, limit=None, sort=None, skip=None,
              returns=None):
@@ -69,29 +79,39 @@ class Storage(object):
         if not filters:
             filters = {}
 
-        results = self.collection.find(filters, **kwargs)
+        try:
+            results = self.collection.find(filters, **kwargs)
 
-        logger.debug("Result: %s" % results)
+            self.log.debug("Result: %s" % results)
 
-        if sort:
-            if sort['direction'] == 'asc':
-                key = ASCENDING
+            if sort:
+                if sort['direction'] == 'asc':
+                    key = ASCENDING
+                else:
+                    key = DESCENDING
+                return json.loads(dumps(results.sort(sort['key'], key)))
             else:
-                key = DESCENDING
-            return json.loads(dumps(results.sort(sort['key'], key)))
-        else:
-            return json.loads(dumps(results))
+                return json.loads(dumps(results))
+        except AutoReconnect:
+            pass
 
     def insert(self, doc_pin):
 
-        results = self.collection.insert({'doc_pin': doc_pin})
+        try:
+            results = self.collection.insert({'doc_pin': doc_pin})
 
-        return json.loads(dumps(results))
+            return json.loads(dumps(results))
+        except AutoReconnect:
+            pass
 
     def remove(self, doc_pin):
-        results = []
-        for element in self.getCollections():
-            self.setCollection(element)
-            results.append(self.collection.remove({'doc_pin': doc_pin},))
 
-        return json.loads(dumps(results))
+        try:
+            results = []
+            for element in self.getCollections():
+                self.setCollection(element)
+                results.append(self.collection.remove({'doc_pin': doc_pin},))
+
+            return json.loads(dumps(results))
+        except AutoReconnect:
+            pass

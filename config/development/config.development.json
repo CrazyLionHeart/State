@@ -48,7 +48,7 @@
       },
       "State": {
         "level": "WARN",
-        "propagate": true
+        "propagate": false
       }
     },
     "version": 1

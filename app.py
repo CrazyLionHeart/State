@@ -130,9 +130,13 @@ def list(user_login):
                 filters[rule['field']] = []
 
             if rule['op'] == "bw":
-                filters[rule['field']].append({'$regex': '^%s' % rule['data']})
+                filters[rule['field']] = {
+                    '$regex': re.compile("^%s" % rule['data'], re.UNICODE)}
+
             elif rule['op'] == "ew":
-                filters[rule['field']].append({'$regex': '%s^' % rule['data']})
+                filters[rule['field']] = {
+                    '$regex': re.compile("%s$" % rule['data'], re.UNICODE)}
+
             elif rule['op'] == "eq":
                 filters[rule['field']].append(rule['data'])
             elif rule['op'] == "ne":
@@ -149,14 +153,14 @@ def list(user_login):
                 filters[rule['field']].append(
                     {'$text': {'$search': rule['data']}})
             elif rule['op'] == 'nc':
-                    filters[rule['field']] = {
-                        '$not': re.compile("%s" % rule['data'])}
+                filters[rule['field']] = {
+                    '$not': re.compile("%s" % rule['data'], re.UNICODE)}
             elif rule['op'] == 'bn':
                 filters[rule['field']] = {
-                    '$not': re.compile("^%s" % rule['data'])}
+                    '$not': re.compile("^%s" % rule['data'], re.UNICODE)}
             elif rule['op'] == 'en':
                 filters[rule['field']] = {
-                    '$not': re.compile("%s$" % rule['data'])}
+                    '$not': re.compile("%s$" % rule['data'], re.UNICODE)}
             elif rule['op'] == "in":
                 filters[rule['field']] = {'$in': rule['data']}
             elif rule['op'] == "nin":
@@ -169,9 +173,13 @@ def list(user_login):
                     filters[rule['field']] = []
 
                 if rule['op'] == "bw":
-                    filters[rule['field']] = re.compile("^%s" % rule['data'])
+                    filters[rule['field']] = {
+                        '$regex': re.compile("^%s" % rule['data'], re.UNICODE)}
+
                 elif rule['op'] == "ew":
-                    filters[rule['field']] = re.compile("%s$" % rule['data'])
+                    filters[rule['field']] = {
+                        '$regex': re.compile("%s$" % rule['data'], re.UNICODE)}
+
                 elif rule['op'] == "eq":
                     filters[rule['field']] = rule['data']
                 elif rule['op'] == "ne":
@@ -188,13 +196,13 @@ def list(user_login):
                     filters[rule['field']] = re.compile("%s" % rule['data'])
                 elif rule['op'] == 'nc':
                     filters[rule['field']] = {
-                        '$not': re.compile("%s" % rule['data'])}
+                        '$not': re.compile("%s" % rule['data'], re.UNICODE)}
                 elif rule['op'] == 'bn':
                     filters[rule['field']] = {
-                        '$not': re.compile("^%s" % rule['data'])}
+                        '$not': re.compile("^%s" % rule['data'], re.UNICODE)}
                 elif rule['op'] == 'en':
                     filters[rule['field']] = {
-                        '$not': re.compile("%s$" % rule['data'])}
+                        '$not': re.compile("%s$" % rule['data'], re.UNICODE)}
                 elif rule['op'] == "in":
                     filters[rule['field']] = {'$in': rule['data']}
                 elif rule['op'] == "nin":
